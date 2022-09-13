@@ -1,7 +1,7 @@
 # Hellenic Hangman
 
 ## Vanilla JS project
-## Though with old `function` syntax
+Though with old `function` syntax
 
 ### It runs on your browser
 
