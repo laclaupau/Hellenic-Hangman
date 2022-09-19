@@ -1,93 +1,145 @@
-let chosenWord;
+const letterButtons = document.querySelectorAll("#letters button");
+const spans = document.querySelectorAll("span");
+const playButton = document.getElementById("play");
+const image = document.getElementById("img");
+const result = document.getElementById("result");
+const newWordContainer = document.getElementById("new-word");
+
+let wordToFigure;
+let userChosenLetter = "";
 let missedShots = 0;
 let rightShots = 0;
-const listOfGods = ['Dionysus', 'Hermes', 'Hephaestus', 'Athena', 'Zeus', 'Hera', 'Poseidon', 'Demeter', 'Dionysus', 'Aphrodite', 'Apollo', 'Ares', 'Artemis'];
-const btn = id('play');
-const image = id('missed-img');
-const btn_letters = document.querySelectorAll("#letters button");
+let goodCall = false;
 
-btn.addEventListener('click', start);
+const listOfGods = [
+  "Dionysus",
+  "Hermes",
+  "Hephaestus",
+  "Athena",
+  "Zeus",
+  "Hera",
+  "Poseidon",
+  "Demeter",
+  "Dionysus",
+  "Aphrodite",
+  "Apollo",
+  "Ares",
+  "Artemis",
+];
 
-function id(str) {
-    return document.getElementById(str);
-}
+const getRandomValue = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-function get_random(num_min, num_max) {
-    const range = num_max - num_min; 
-    const randomValue = Math.floor(Math.random() * range) + num_min;
-    return randomValue;
-}
+const disableButton = (btn) => {
+  btn.setAttribute("disabled", true);
+};
 
-function start(event) {
-    id('result').innerHTML = "";
-    image.src = 'assets/img0.jpg';
-    btn.disabled = true;
-    missedShots = 0;
-    rightShots = 0;
+const enableButton = (btn) => {
+  btn.removeAttribute("disabled");
+};
 
-    const newWordSlot = id('new-word');
-    newWordSlot.innerHTML = '';
+const gameOver = () => {
+  enableButton(playButton);
+  letterButtons.forEach((button) => disableButton(button));
+};
 
-    const numberOfGods = listOfGods.length;
-    const randomValue = get_random(0, numberOfGods);
+const cleanResult = () => {
+  console.clear();
+  result.innerHTML = "";
+  disableButton(playButton);
+  missedShots = 0;
+  rightShots = 0;
+  letterButtons.forEach((button) => enableButton(button));
+  const emptyLowDash = document.querySelectorAll("#new-word span");
+  emptyLowDash.forEach((dash) => {
+    dash.innerHTML = "";
+    dash.remove();
+  });
+  setHangmanBodyPart(0);
+};
 
-    chosenWord = listOfGods[randomValue];
-    console.log(chosenWord);
-    const cant_letters = chosenWord.length;
-    
-    for (let i = 0; i < btn_letters.length; i++) {
-        btn_letters[i].disabled = false;
-    }
+const createGaps = () => {
+  const randomGod = getRandomValue(listOfGods);
+  for (let i = 0; i < randomGod.length; i++) {
+    const span = document.createElement("span");
+    newWordContainer.appendChild(span);
+  }
+  wordToFigure = randomGod;
+};
 
-    for (let i = 0; i < cant_letters; i++) {
-        const span = document.createElement('span');
-        newWordSlot.appendChild(span);
-    }
-}
+const setHangmanBodyPart = (value) => {
+  const source = `assets/img${value}.jpg`;
+  image.setAttribute("src", source);
+};
 
-for (let i = 0; i < btn_letters.length; i++) {
-    btn_letters[i].addEventListener('click', click_letters);
-}
+const saveUserChoice = () => {
+  letterButtons.forEach((button) => {
+    button.onclick = () => {
+      const letter = button.textContent.toLowerCase();
+      userChosenLetter = letter;
+      // console.log(userChosenLetter);
+      disableButton(button);
 
-function click_letters(event) {
-    const spans = document.querySelectorAll('#new-word span');
-    const button = event.target; //cuál letter llamó a la fx
-    button.disabled = true;
-    
-    const letter = button.innerHTML.toLowerCase(); //contenido entre que abre y cierra tag
-    const word = chosenWord.toLowerCase();
-
-    let goodCall = false;
-    for (let i = 0; i < word.length; i++) {
-        if (letter == word[i]) {
-            //la var i es la posición de la letter en la word
-            //que coincide c el span al que hay que mostrar la letter
-            spans[i].innerHTML = letter;
-            rightShots++;
-            goodCall = true;
+      for (let i = 0; i < wordToFigure.length; i++) {
+        if (userChosenLetter !== wordToFigure[i]) {
+          goodCall = false;
         }
-    }
-    if (goodCall == false) {
-        missedShots++;
-        const source = `assets/img${missedShots}.jpg`;
-        image.src = source;
-    }
+      }
 
-    if (missedShots == 7) {
-        id('result').innerHTML = "You lose! The right word was " + chosenWord;
-        game_over();
+      fillInBlank();
+    };
+  });
+};
 
-    } else if (rightShots == chosenWord.length) {
-        id('result').innerHTML = "You win!";
-        game_over();
+const setRightCall = () => {
+  rightShots++;
+  goodCall = true;
+  console.log("rightShots", rightShots);
+};
+
+const setBadCall = () => {
+  missedShots++;
+  console.log("missedShots", missedShots);
+  setHangmanBodyPart(missedShots);
+};
+
+const defineScore = () => {
+  if (missedShots === 7) {
+    result.innerHTML = "You lose! The right word was " + wordToFigure;
+    gameOver();
+  }
+  if (rightShots === wordToFigure.length) {
+    result.innerHTML = "You win!";
+    gameOver();
+  }
+};
+
+const fillInBlank = () => {
+  for (let i = 0; i < wordToFigure.length; i++) {
+    if (wordToFigure[i].toLowerCase() === userChosenLetter.toLowerCase()) {
+      const emptyLowDash = document.querySelectorAll("#new-word span");
+      console.log(wordToFigure[i], "es igual a", userChosenLetter);
+      emptyLowDash[i].innerHTML =
+        userChosenLetter === wordToFigure[i].charAt(0)
+          ? userChosenLetter
+          : userChosenLetter.toUpperCase();
+      setRightCall();
     }
-}
+  }
+  if (goodCall == false) {
+    setBadCall();
+  }
 
-function game_over() {
-    for (let i = 0; i < btn_letters.length; i++) {
-        btn_letters[i].disabled = true;       
-    }
-    btn.disabled = false;
-}
+  defineScore();
+};
 
-game_over();
+const start = () => {
+  cleanResult();
+  createGaps();
+  saveUserChoice();
+};
+
+start();
+
+playButton.onclick = () => {
+  start();
+};
